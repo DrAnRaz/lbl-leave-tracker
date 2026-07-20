@@ -266,6 +266,7 @@ const app=document.getElementById("app");
 function render(){
   document.getElementById("headerBtns").innerHTML = state.profile ? `
     <span class="savebar" id="saveStatus"></span>
+    <button class="btn" onclick="openEditPanel()">✏️ Edit profile</button>
     <button class="btn primary" onclick="saveFile()">💾 Save to file</button>
     <button class="btn ghost" onclick="openHelp()">❓ Help &amp; policy</button>` :
     `<button class="btn ghost" onclick="openHelp()">❓ Help &amp; policy</button>`;
@@ -462,7 +463,7 @@ function renderMain(){
     <h2>Your profile <span class="pill">${esc(p.name)||"Employee"}</span><span class="pill">${p.payType==="monthly"?"Monthly / days · exempt":"Bi-weekly / hours · non-exempt"}</span><span class="pill">${years} yrs service → ${tierNow.days} d/yr</span>${p.pct<100?`<span class="pill">${p.pct}% appointment</span>`:""}${p.group==="smg"?`<span class="pill">SMG</span>`:""}</h2>
     <div class="note">Accrual rate: <b>${tierNow.f}</b> vacation / <b>${SICK_F}</b> sick per paid hour.
     ${nxt?`Next step-up: <b>${nxt.row.days} days/yr (cap ${nxt.row.days*16*p.pct/100} h)</b> starting <b>${MONTHS[nxt.date.getMonth()]} ${nxt.date.getFullYear()}</b> — projections below already include it.`:"You are at the top accrual tier."}</div>
-    <details>
+    <details id="profilePanel">
       <summary>Edit profile / balances</summary>
       <div class="row2" style="margin-top:10px">
         <div class="field"><label>Name</label><input id="e_name" type="text" value="${esc(p.name)}"></div>
@@ -589,6 +590,14 @@ function saveProfile(){
   p.startSick=parseFloat(document.getElementById("e_sick").value)||0;
   persist(); render();
 }
+function openEditPanel(){
+  const d=document.getElementById("profilePanel");
+  if(!d) return;
+  d.open=true;
+  d.scrollIntoView({behavior:"smooth",block:"center"});
+  const card=d.closest(".card");
+  if(card){ card.style.transition="box-shadow .4s"; card.style.boxShadow="0 0 0 3px var(--blue)"; setTimeout(()=>{card.style.boxShadow="";},2500); }
+}
 function resetAll(){
   if(confirm("Delete your profile AND all logged periods? This cannot be undone (export a JSON backup first if unsure).")){
     state=blankState(); localStorage.removeItem(LS_KEY); render();
@@ -705,7 +714,7 @@ function renderFooter(){
   <div class="disc"><b>Disclaimer:</b> Unofficial planning tool for Berkeley Lab <b>non-represented</b> employees, based on the RPM
   <a href="https://commons.lbl.gov/spaces/rpm2/pages/74319215/Vacation+Leave" target="_blank" rel="noopener">Vacation Leave</a> policy (pub. 7/9/2021) and the Factor Leave Accrual Tables.
   LETS is the official record — always reconcile with LETS. Represented employees: consult your CBA. No data ever leaves your computer.</div>
-  <p style="text-align:center">Created by <b>Dr. Anikó Rasztovácz</b> · Made with ❤️ for Berkeley Lab colleagues · v1.2 · ${new Date().getFullYear()}</p>`;
+  <p style="text-align:center">Created by <b>Dr. Anikó Rasztovácz</b> · Made with ❤️ for Berkeley Lab colleagues · v1.3 · ${new Date().getFullYear()}</p>`;
 }
 
 /* ================= INIT ================= */

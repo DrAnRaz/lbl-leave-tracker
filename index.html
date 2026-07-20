@@ -688,9 +688,11 @@ function saveFile(){
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
   const nm=(state.profile&&state.profile.name)?state.profile.name.replace(/[^A-Za-z0-9]+/g,"_")+"_":"";
-  a.download=nm+"LBL_Leave_Tracker.html";
+  const d=new Date();
+  const stamp=d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"_"+pad(d.getHours())+"h"+pad(d.getMinutes());
+  a.download=nm+"LBL_Leave_Tracker_"+stamp+".html";
   a.click(); URL.revokeObjectURL(a.href);
-  alert("A copy of this tracker WITH your data inside was downloaded.\n\nKeep that file — opening it later (any computer, any browser) restores everything. You can delete older copies.");
+  alert("A copy of this tracker WITH your data inside was downloaded as:\n\n"+a.download+"\n\nThe date & time in the filename tell you which copy is newest. Opening it later (any computer, any browser) restores everything. You can delete older copies.");
 }
 function exportJSON(){
   const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
@@ -749,7 +751,7 @@ function renderFooter(){
   <div class="disc"><b>Disclaimer:</b> Unofficial planning tool for Berkeley Lab <b>non-represented</b> employees, based on the RPM
   <a href="https://commons.lbl.gov/spaces/rpm2/pages/74319215/Vacation+Leave" target="_blank" rel="noopener">Vacation Leave</a> policy (pub. 7/9/2021) and the Factor Leave Accrual Tables.
   LETS is the official record — always reconcile with LETS. Represented employees: consult your CBA. No data ever leaves your computer.</div>
-  <p style="text-align:center">Created by <b>Dr. Anikó Rasztovácz</b> · Made with ❤️ for Berkeley Lab colleagues · v1.10 · ${new Date().getFullYear()}</p>`;
+  <p style="text-align:center">Created by <b>Dr. Anikó Rasztovácz</b> · Made with ❤️ for Berkeley Lab colleagues · v1.11 · ${new Date().getFullYear()}</p>`;
 }
 
 /* ================= INIT ================= */

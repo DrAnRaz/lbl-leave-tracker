@@ -493,18 +493,6 @@ function renderMain(){
   </div>
 
   <div class="card">
-    <h2>📈 Forecast — when will I hit the cap?</h2>
-    <div class="slider-row">
-      <span>If I use</span>
-      <input type="range" id="planSlider" min="0" max="5" step="0.5" value="0" oninput="renderChart()">
-      <span class="slider-val" id="planVal"></span>
-    </div>
-    <div class="chart-wrap" id="chartBox"></div>
-    <div class="legend"><i style="background:var(--teal)"></i>projected balance <i style="background:var(--red)"></i>your cap <i style="background:var(--orange);height:8px;width:8px;border-radius:50%"></i>hours forfeited</div>
-    <div class="note" id="chartSummary" style="margin-top:6px"></div>
-  </div>
-
-  <div class="card">
     <h2>🗓️ Leave log <span class="note">(one row per ${p.payType==="monthly"?"month":"4-week cycle"} — enter paid hours &amp; leave taken; balances auto-calculate)</span></h2>
     ${behindHtml}
     <div style="overflow-x:auto">
@@ -526,6 +514,18 @@ function renderMain(){
       <button class="btn primary" onclick="addPeriod()">＋ Add period (${periodLabel(nextPeriodEnd(state.periods.length? state.periods[state.periods.length-1].end : firstAnchorISO()))})</button>
       <span class="note">Completed periods appear here automatically — you only edit a row when you <b>did</b> take leave or had unpaid time. Enter an amount and a <b>leave-type dropdown</b> appears (Vacation/FMLA/PDL · Employee Sick/Family Sick/FMLA/Bereavement). <b>✕ removes any row</b>; a completed period returns as a fresh “auto” row, so ✕ also works as “reset this month”. “Paid hours” is pre-filled with your normal schedule; overtime/on-call never accrues leave and is capped automatically.</span>
     </div>
+  </div>
+
+  <div class="card">
+    <h2>📈 Forecast — when will I hit the cap?</h2>
+    <div class="slider-row">
+      <span>If I use</span>
+      <input type="range" id="planSlider" min="0" max="5" step="0.5" value="0" oninput="renderChart()">
+      <span class="slider-val" id="planVal"></span>
+    </div>
+    <div class="chart-wrap" id="chartBox"></div>
+    <div class="legend"><i style="background:var(--teal)"></i>projected balance <i style="background:var(--red)"></i>your cap <i style="background:var(--orange);height:8px;width:8px;border-radius:50%"></i>hours forfeited</div>
+    <div class="note" id="chartSummary" style="margin-top:6px"></div>
   </div>
 
   <div class="card">
@@ -732,7 +732,7 @@ function renderFooter(){
   <div class="disc"><b>Disclaimer:</b> Unofficial planning tool for Berkeley Lab <b>non-represented</b> employees, based on the RPM
   <a href="https://commons.lbl.gov/spaces/rpm2/pages/74319215/Vacation+Leave" target="_blank" rel="noopener">Vacation Leave</a> policy (pub. 7/9/2021) and the Factor Leave Accrual Tables.
   LETS is the official record — always reconcile with LETS. Represented employees: consult your CBA. No data ever leaves your computer.</div>
-  <p style="text-align:center">Created by <b>Dr. Anikó Rasztovácz</b> · Made with ❤️ for Berkeley Lab colleagues · v1.7 · ${new Date().getFullYear()}</p>`;
+  <p style="text-align:center">Created by <b>Dr. Anikó Rasztovácz</b> · Made with ❤️ for Berkeley Lab colleagues · v1.8 · ${new Date().getFullYear()}</p>`;
 }
 
 /* ================= INIT ================= */

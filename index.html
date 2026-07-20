@@ -511,8 +511,8 @@ function renderMain(){
     <table>
       <thead><tr>
         <th>Period</th><th class="num">Paid hours</th>
-        <th class="num">Vacation / regular leave (${p.payType==="monthly"?"days":"hrs"})</th>
-        <th class="num">Sick leave (${p.payType==="monthly"?"days":"hrs"})</th>
+        <th class="num">Vacation / regular leave (hrs)</th>
+        <th class="num">Sick leave (hrs)</th>
         <th class="num">Vac. accrued</th><th class="num">Vac. balance</th><th class="num">Lost ⚠️</th><th class="num">Sick balance</th><th>Note</th><th></th>
       </tr></thead>
       <tbody>
@@ -541,14 +541,14 @@ function renderMain(){
 }
 
 function logRow(row,i,n){
-  const p=state.profile, inDays=p.payType==="monthly";
-  const conv=inDays?8:1;
+  const p=state.profile, halfDay=p.payType==="monthly";  // exempt: half-day (4 h) increments in LETS
+  const conv=1;                                           // leave log is always in hours
   const overSched = (row.r.paidHours||0) > basePeriodHours(row.end)+0.001;
   return `<tr>
     <td><b>${periodLabel(row.r.end)}</b>${row.r.auto?` <span class="pill" style="background:#fef4e6;color:#7a4b09" title="Filled in automatically: normal schedule, no leave taken. Edit any cell to confirm/correct.">auto</span>`:""}<br><span class="note">${row.tier.f} × h</span></td>
     <td class="num"><input type="number" step="0.01" min="0" value="${row.r.paidHours}" onchange="updRow(${i},'paidHours',this.value,1)" title="Regular paid hours in this period (incl. holidays & paid leave)">${overSched?`<div class="note" title="Hours above the full-time schedule don't accrue leave">capped→${h2(row.counted)}</div>`:""}</td>
-    <td class="num"><input type="number" step="${inDays?0.25:0.5}" min="0" value="${(row.r.vacTaken||0)/conv}" onchange="updRow(${i},'vacTaken',this.value,${conv})">${(row.r.vacTaken||0)>0?`<select class="typeSel" onchange="updRow(${i},'vacType',this.value,0)" title="Which LETS code this vacation-side leave was reported under">${VAC_TYPES.map(t=>`<option${(row.r.vacType||VAC_TYPES[0])===t?" selected":""}>${t}</option>`).join("")}</select>`:""}</td>
-    <td class="num"><input type="number" step="${inDays?0.25:0.5}" min="0" value="${(row.r.sickTaken||0)/conv}" onchange="updRow(${i},'sickTaken',this.value,${conv})">${(row.r.sickTaken||0)>0?`<select class="typeSel" onchange="updRow(${i},'sickType',this.value,0)" title="Which LETS code this sick-side leave was reported under (Bereavement also deducts from sick balance)">${SICK_TYPES.map(t=>`<option${(row.r.sickType||SICK_TYPES[0])===t?" selected":""}>${t}</option>`).join("")}</select>`:""}</td>
+    <td class="num"><input type="number" step="${halfDay?4:0.5}" min="0" value="${row.r.vacTaken||0}" onchange="updRow(${i},'vacTaken',this.value,${conv})" title="${halfDay?"Exempt employees report in half-day increments (4 h)":"Hours"}">${(row.r.vacTaken||0)>0?`<select class="typeSel" onchange="updRow(${i},'vacType',this.value,0)" title="Which LETS code this vacation-side leave was reported under">${VAC_TYPES.map(t=>`<option${(row.r.vacType||VAC_TYPES[0])===t?" selected":""}>${t}</option>`).join("")}</select>`:""}</td>
+    <td class="num"><input type="number" step="${halfDay?4:0.5}" min="0" value="${row.r.sickTaken||0}" onchange="updRow(${i},'sickTaken',this.value,${conv})" title="${halfDay?"Exempt employees report in half-day increments (4 h)":"Hours"}">${(row.r.sickTaken||0)>0?`<select class="typeSel" onchange="updRow(${i},'sickType',this.value,0)" title="Which LETS code this sick-side leave was reported under (Bereavement also deducts from sick balance)">${SICK_TYPES.map(t=>`<option${(row.r.sickType||SICK_TYPES[0])===t?" selected":""}>${t}</option>`).join("")}</select>`:""}</td>
     <td class="num">+${h2(row.accr)}</td>
     <td class="num"><b class="${row.endBal<0?"neg":""}">${h2(row.endBal)}</b><br><span class="note">${dOnly(row.endBal)} d</span></td>
     <td class="num ${row.lost>0.005?"lost":"zero"}">${row.lost>0.005?"−"+h2(row.lost):"0"}</td>
@@ -732,7 +732,7 @@ function renderFooter(){
   <div class="disc"><b>Disclaimer:</b> Unofficial planning tool for Berkeley Lab <b>non-represented</b> employees, based on the RPM
   <a href="https://commons.lbl.gov/spaces/rpm2/pages/74319215/Vacation+Leave" target="_blank" rel="noopener">Vacation Leave</a> policy (pub. 7/9/2021) and the Factor Leave Accrual Tables.
   LETS is the official record — always reconcile with LETS. Represented employees: consult your CBA. No data ever leaves your computer.</div>
-  <p style="text-align:center">Created by <b>Dr. Anikó Rasztovácz</b> · Made with ❤️ for Berkeley Lab colleagues · v1.5 · ${new Date().getFullYear()}</p>`;
+  <p style="text-align:center">Created by <b>Dr. Anikó Rasztovácz</b> · Made with ❤️ for Berkeley Lab colleagues · v1.6 · ${new Date().getFullYear()}</p>`;
 }
 
 /* ================= INIT ================= */

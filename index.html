@@ -29,6 +29,7 @@ main{max-width:1080px;margin:0 auto;padding:18px 16px 60px}
 .kpi .lbl{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);font-weight:700}
 .kpi .val{font-size:26px;font-weight:700;color:var(--blue);margin:4px 0 2px}
 .kpi .sub{font-size:12.5px;color:var(--mut)}
+.typeSel{display:block;width:100%;max-width:130px;margin:3px 0 0 auto;font-size:11px;padding:2px 4px;border:1px solid var(--line);border-radius:4px;color:var(--txt);background:#fff}
 .bar{height:8px;background:#e5edf2;border-radius:5px;margin-top:8px;overflow:hidden}
 .bar>span{display:block;height:100%;border-radius:5px;background:var(--teal)}
 .gauge{height:34px;background:#e5edf2;border-radius:9px;overflow:hidden;margin:12px 0 6px;border:1px solid var(--line)}
@@ -114,6 +115,9 @@ const TIERS = {
   ]
 };
 const LS_KEY = "lbl-leave-tracker-v1";
+/* Leave-type options per balance family — from LBL "Guide to Frequently Used LETS Codes" */
+const VAC_TYPES  = ["Vacation","Vacation – FMLA/CFRA","Vacation – PDL"];
+const SICK_TYPES = ["Employee Sick","Family Sick","Sick – FMLA/CFRA","Sick – PDL","Bereavement"];
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 /* ================= STATE ================= */
@@ -397,6 +401,7 @@ function renderMain(){
   const nxt=nextTierInfo();
   const proj0=projectForward(0,26);
   const lost12=proj0.slice(0, p.payType==="monthly"?12:13).reduce((s,x)=>s+x.lost,0);
+  const lostNext=proj0.length? proj0[0].lost : 0;
   const firstLoss=proj0.find(x=>x.lost>0);
   const perPeriodAccr = tierNow.f*scheduledHours(p.payType==="monthly"?monthEnd(today.getFullYear(),today.getMonth()):today);
   const svc=fromISO(p.serviceStart+"-01");
@@ -454,8 +459,8 @@ function renderMain(){
     </div>
     <div class="kpi">
       <div class="lbl">If you take no time off</div>
-      <div class="val" style="color:${lost12>0.005?"var(--red)":"var(--green)"}">−${h2(lost12)} h</div>
-      <div class="sub">${lost12>0.005? "you'd forfeit "+dOnly(lost12)+" days over the next 12 months"+(p.rate?` ≈ $${h2(lost12*p.rate)}`:"")+(firstLoss?` · losses start ${periodLabel(firstLoss.endISO)}`:"") : "no projected loss in the next 12 months 🙂"}</div>
+      <div class="val" style="color:${lostNext>0.005?"var(--red)":"var(--green)"}">−${h2(lostNext)} h</div>
+      <div class="sub">${lostNext>0.005? "hours you'd forfeit in "+periodLabel(proj0[0].endISO)+(p.rate?` ≈ $${h2(lostNext*p.rate)}`:"") : "no loss next "+(p.payType==="monthly"?"month":"cycle")+" 🙂"}</div>
     </div>
     <div class="kpi">
       <div class="lbl">Hours lost so far</div>
@@ -506,8 +511,8 @@ function renderMain(){
     <table>
       <thead><tr>
         <th>Period</th><th class="num">Paid hours</th>
-        <th class="num">Vacation used (${p.payType==="monthly"?"days":"hrs"})</th>
-        <th class="num">Sick used (${p.payType==="monthly"?"days":"hrs"})</th>
+        <th class="num">Vacation / regular leave (${p.payType==="monthly"?"days":"hrs"})</th>
+        <th class="num">Sick leave (${p.payType==="monthly"?"days":"hrs"})</th>
         <th class="num">Vac. accrued</th><th class="num">Vac. balance</th><th class="num">Lost ⚠️</th><th class="num">Sick balance</th><th>Note</th><th></th>
       </tr></thead>
       <tbody>
@@ -519,7 +524,7 @@ function renderMain(){
     </div>
     <div class="flexbtns" style="margin-top:10px">
       <button class="btn primary" onclick="addPeriod()">＋ Add period (${periodLabel(nextPeriodEnd(state.periods.length? state.periods[state.periods.length-1].end : firstAnchorISO()))})</button>
-      <span class="note">Completed periods appear here automatically — you only edit a row when you <b>did</b> take leave or had unpaid time. “Paid hours” is pre-filled with your normal schedule; overtime/on-call never accrues leave and is capped automatically.</span>
+      <span class="note">Completed periods appear here automatically — you only edit a row when you <b>did</b> take leave or had unpaid time. Enter an amount and a <b>leave-type dropdown</b> appears (Vacation/FMLA/PDL · Employee Sick/Family Sick/FMLA/Bereavement). <b>✕ removes any row</b>; a completed period returns as a fresh “auto” row, so ✕ also works as “reset this month”. “Paid hours” is pre-filled with your normal schedule; overtime/on-call never accrues leave and is capped automatically.</span>
     </div>
   </div>
 
@@ -542,14 +547,14 @@ function logRow(row,i,n){
   return `<tr>
     <td><b>${periodLabel(row.r.end)}</b>${row.r.auto?` <span class="pill" style="background:#fef4e6;color:#7a4b09" title="Filled in automatically: normal schedule, no leave taken. Edit any cell to confirm/correct.">auto</span>`:""}<br><span class="note">${row.tier.f} × h</span></td>
     <td class="num"><input type="number" step="0.01" min="0" value="${row.r.paidHours}" onchange="updRow(${i},'paidHours',this.value,1)" title="Regular paid hours in this period (incl. holidays & paid leave)">${overSched?`<div class="note" title="Hours above the full-time schedule don't accrue leave">capped→${h2(row.counted)}</div>`:""}</td>
-    <td class="num"><input type="number" step="${inDays?0.25:0.5}" min="0" value="${(row.r.vacTaken||0)/conv}" onchange="updRow(${i},'vacTaken',this.value,${conv})"></td>
-    <td class="num"><input type="number" step="${inDays?0.25:0.5}" min="0" value="${(row.r.sickTaken||0)/conv}" onchange="updRow(${i},'sickTaken',this.value,${conv})"></td>
+    <td class="num"><input type="number" step="${inDays?0.25:0.5}" min="0" value="${(row.r.vacTaken||0)/conv}" onchange="updRow(${i},'vacTaken',this.value,${conv})">${(row.r.vacTaken||0)>0?`<select class="typeSel" onchange="updRow(${i},'vacType',this.value,0)" title="Which LETS code this vacation-side leave was reported under">${VAC_TYPES.map(t=>`<option${(row.r.vacType||VAC_TYPES[0])===t?" selected":""}>${t}</option>`).join("")}</select>`:""}</td>
+    <td class="num"><input type="number" step="${inDays?0.25:0.5}" min="0" value="${(row.r.sickTaken||0)/conv}" onchange="updRow(${i},'sickTaken',this.value,${conv})">${(row.r.sickTaken||0)>0?`<select class="typeSel" onchange="updRow(${i},'sickType',this.value,0)" title="Which LETS code this sick-side leave was reported under (Bereavement also deducts from sick balance)">${SICK_TYPES.map(t=>`<option${(row.r.sickType||SICK_TYPES[0])===t?" selected":""}>${t}</option>`).join("")}</select>`:""}</td>
     <td class="num">+${h2(row.accr)}</td>
     <td class="num"><b class="${row.endBal<0?"neg":""}">${h2(row.endBal)}</b><br><span class="note">${dOnly(row.endBal)} d</span></td>
     <td class="num ${row.lost>0.005?"lost":"zero"}">${row.lost>0.005?"−"+h2(row.lost):"0"}</td>
     <td class="num ${row.sickEnd<0?"neg":""}">${h2(row.sickEnd)}</td>
     <td><input type="text" value="${esc(row.r.note||"")}" onchange="updRow(${i},'note',this.value,0)" placeholder="e.g. FML, surgery…"></td>
-    <td>${i===n-1?`<button class="btn small danger" title="Delete last row" onclick="delRow(${i})">✕</button>`:""}</td>
+    <td><button class="btn small danger" title="Remove this row. A completed period reappears as a fresh 'auto' row (normal schedule, no leave) — use this to reset a month you mis-entered." onclick="delRow(${i})">✕</button></td>
   </tr>`;
 }
 
@@ -565,17 +570,20 @@ function autoFillPeriods(){
      "worked normal schedule, took no leave" and is added automatically. */
   if(!state.profile) return 0;
   const today=new Date();
-  let e = state.periods.length? state.periods[state.periods.length-1].end : firstAnchorISO();
-  let n=nextPeriodEnd(e), added=0, guard=0;
-  while(fromISO(n)<=today && guard<200){
-    state.periods.push({end:n, paidHours:Math.round(scheduledHours(fromISO(n))*100)/100, vacTaken:0, sickTaken:0, note:"", auto:true});
-    n=nextPeriodEnd(n); added++; guard++;
+  const have=new Set(state.periods.map(r=>r.end));
+  let n=nextPeriodEnd(firstAnchorISO()), added=0, guard=0;
+  while(fromISO(n)<=today && guard<400){
+    if(!have.has(n)){
+      state.periods.push({end:n, paidHours:Math.round(scheduledHours(fromISO(n))*100)/100, vacTaken:0, sickTaken:0, note:"", auto:true});
+      added++;
+    }
+    n=nextPeriodEnd(n); guard++;
   }
-  if(added) persist();
+  if(added){ state.periods.sort((a,b)=>a.end.localeCompare(b.end)); persist(); }
   return added;
 }
 function updRow(i,field,val,conv){
-  if(field==="note"){ state.periods[i].note=val; }
+  if(field==="note"||field==="vacType"||field==="sickType"){ state.periods[i][field]=val; }
   else{
     let v=parseFloat(val); if(isNaN(v)||v<0)v=0;
     state.periods[i][field]= field==="paidHours"? v : v*conv;
@@ -583,7 +591,12 @@ function updRow(i,field,val,conv){
   delete state.periods[i].auto;   // touched by the user -> confirmed
   persist(); render();
 }
-function delRow(i){ state.periods.splice(i,1); persist(); render(); }
+function delRow(i){
+  const r=state.periods[i];
+  const hasData=(r.vacTaken||0)>0||(r.sickTaken||0)>0||(r.note||"").length>0;
+  if(hasData && !confirm("This row has leave entries. Remove it anyway?\n\nA completed period will come back automatically as a fresh 'auto' row (normal schedule, no leave taken).")) return;
+  state.periods.splice(i,1); persist(); render();
+}
 function saveProfile(){
   const p=state.profile;
   p.name=document.getElementById("e_name").value.trim();
@@ -719,7 +732,7 @@ function renderFooter(){
   <div class="disc"><b>Disclaimer:</b> Unofficial planning tool for Berkeley Lab <b>non-represented</b> employees, based on the RPM
   <a href="https://commons.lbl.gov/spaces/rpm2/pages/74319215/Vacation+Leave" target="_blank" rel="noopener">Vacation Leave</a> policy (pub. 7/9/2021) and the Factor Leave Accrual Tables.
   LETS is the official record — always reconcile with LETS. Represented employees: consult your CBA. No data ever leaves your computer.</div>
-  <p style="text-align:center">Created by <b>Dr. Anikó Rasztovácz</b> · Made with ❤️ for Berkeley Lab colleagues · v1.4 · ${new Date().getFullYear()}</p>`;
+  <p style="text-align:center">Created by <b>Dr. Anikó Rasztovácz</b> · Made with ❤️ for Berkeley Lab colleagues · v1.5 · ${new Date().getFullYear()}</p>`;
 }
 
 /* ================= INIT ================= */

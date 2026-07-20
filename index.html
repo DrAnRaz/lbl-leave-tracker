@@ -437,6 +437,11 @@ function renderMain(){
   </div>
   <div class="grid cols4" style="margin-bottom:18px">
     <div class="kpi">
+      <div class="lbl">Sick balance</div>
+      <div class="val">${h2(c.sick)} h</div>
+      <div class="sub">= ${dOnly(c.sick)} days · no maximum 🙂</div>
+    </div>
+    <div class="kpi">
       <div class="lbl">Vacation balance</div>
       <div class="val">${h2(c.vac)} h</div>
       <div class="sub">= ${dOnly(c.vac)} days · cap ${h2(maxNow)} h (${tierNow.days*2} d)</div>
@@ -448,9 +453,9 @@ function renderMain(){
       <div class="sub">${dOnly(head)} days · you accrue ≈ ${h2(perPeriodAccr)} h / ${p.payType==="monthly"?"month":"cycle"}</div>
     </div>
     <div class="kpi">
-      <div class="lbl">Sick balance</div>
-      <div class="val">${h2(c.sick)} h</div>
-      <div class="sub">= ${dOnly(c.sick)} days · no maximum 🙂</div>
+      <div class="lbl">If you take no time off</div>
+      <div class="val" style="color:${lost12>0.005?"var(--red)":"var(--green)"}">−${h2(lost12)} h</div>
+      <div class="sub">${lost12>0.005? "you'd forfeit "+dOnly(lost12)+" days over the next 12 months"+(p.rate?` ≈ $${h2(lost12*p.rate)}`:"")+(firstLoss?` · losses start ${periodLabel(firstLoss.endISO)}`:"") : "no projected loss in the next 12 months 🙂"}</div>
     </div>
     <div class="kpi">
       <div class="lbl">Hours lost so far</div>
@@ -714,7 +719,7 @@ function renderFooter(){
   <div class="disc"><b>Disclaimer:</b> Unofficial planning tool for Berkeley Lab <b>non-represented</b> employees, based on the RPM
   <a href="https://commons.lbl.gov/spaces/rpm2/pages/74319215/Vacation+Leave" target="_blank" rel="noopener">Vacation Leave</a> policy (pub. 7/9/2021) and the Factor Leave Accrual Tables.
   LETS is the official record — always reconcile with LETS. Represented employees: consult your CBA. No data ever leaves your computer.</div>
-  <p style="text-align:center">Created by <b>Dr. Anikó Rasztovácz</b> · Made with ❤️ for Berkeley Lab colleagues · v1.3 · ${new Date().getFullYear()}</p>`;
+  <p style="text-align:center">Created by <b>Dr. Anikó Rasztovácz</b> · Made with ❤️ for Berkeley Lab colleagues · v1.4 · ${new Date().getFullYear()}</p>`;
 }
 
 /* ================= INIT ================= */

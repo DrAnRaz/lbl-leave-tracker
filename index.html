@@ -133,7 +133,25 @@ function loadState(){
   else state = emb || ls || blankState();
   if(!state.periods) state.periods = [];
 }
+let syncing=false;   // true while re-rendering from another tab's save — suppress writes
+window.addEventListener("storage",(e)=>{
+  if(e.key!==LS_KEY || !e.newValue) return;
+  try{
+    const incoming=JSON.parse(e.newValue);
+    if(incoming && (!state || !state.savedAt || new Date(incoming.savedAt||0) >= new Date(state.savedAt||0))){
+      state=incoming; syncing=true; render(); syncing=false;
+    }
+  }catch(_){}
+});
 function persist(){
+  if(syncing) return;
+  /* never clobber a newer save made by another tab */
+  try{
+    const cur=JSON.parse(localStorage.getItem(LS_KEY));
+    if(cur && cur.savedAt && state.savedAt && new Date(cur.savedAt) > new Date(state.savedAt)){
+      state=cur; syncing=true; render(); syncing=false; return;
+    }
+  }catch(_){}
   state.savedAt = new Date().toISOString();
   try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
   const s=document.getElementById("saveStatus");
@@ -731,7 +749,7 @@ function renderFooter(){
   <div class="disc"><b>Disclaimer:</b> Unofficial planning tool for Berkeley Lab <b>non-represented</b> employees, based on the RPM
   <a href="https://commons.lbl.gov/spaces/rpm2/pages/74319215/Vacation+Leave" target="_blank" rel="noopener">Vacation Leave</a> policy (pub. 7/9/2021) and the Factor Leave Accrual Tables.
   LETS is the official record — always reconcile with LETS. Represented employees: consult your CBA. No data ever leaves your computer.</div>
-  <p style="text-align:center">Created by <b>Dr. Anikó Rasztovácz</b> · Made with ❤️ for Berkeley Lab colleagues · v1.9 · ${new Date().getFullYear()}</p>`;
+  <p style="text-align:center">Created by <b>Dr. Anikó Rasztovácz</b> · Made with ❤️ for Berkeley Lab colleagues · v1.10 · ${new Date().getFullYear()}</p>`;
 }
 
 /* ================= INIT ================= */

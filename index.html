@@ -457,10 +457,10 @@ function renderMain(){
       <div class="val">${h2(head)} h</div>
       <div class="sub">${dOnly(head)} days · you accrue ≈ ${h2(perPeriodAccr)} h / ${p.payType==="monthly"?"month":"cycle"}</div>
     </div>
-    <div class="kpi">
-      <div class="lbl">If you take no time off</div>
+    <div class="kpi" title="Forecast for your NEXT unlogged period, assuming you take zero leave in it. (What already happened in logged periods is in the Lost column of the leave log below.)">
+      <div class="lbl">If you take no time off${proj0.length?` in ${periodLabel(proj0[0].endISO)}`:""}</div>
       <div class="val" style="color:${lostNext>0.005?"var(--red)":"var(--green)"}">−${h2(lostNext)} h</div>
-      <div class="sub">${lostNext>0.005? "hours you'd forfeit in "+periodLabel(proj0[0].endISO)+(p.rate?` ≈ $${h2(lostNext*p.rate)}`:"") : "no loss next "+(p.payType==="monthly"?"month":"cycle")+" 🙂"}</div>
+      <div class="sub">${lostNext>0.005? `you'd be at the cap while accruing — take at least <b>${h2(lostNext)} h</b> that month to keep them${p.rate?` ≈ $${h2(lostNext*p.rate)}`:""}` : "no loss next "+(p.payType==="monthly"?"month":"cycle")+" 🙂"}</div>
     </div>
     <div class="kpi">
       <div class="lbl">Hours lost so far</div>
@@ -513,7 +513,7 @@ function renderMain(){
         <th>Period</th><th class="num">Paid hours</th>
         <th class="num">Vacation / regular leave (hrs)</th>
         <th class="num">Sick leave (hrs)</th>
-        <th class="num">Vac. accrued</th><th class="num">Vac. balance</th><th class="num">Lost ⚠️</th><th class="num">Sick balance</th><th>Note</th><th></th>
+        <th class="num">Vac. accrued</th><th class="num">Vac. balance</th><th class="num" title="Hours that could NOT be added because you were at the cap in that period. At the cap you must take at least as many hours as you accrue in a period (see Vac. accrued) to lose nothing.">Lost ⚠️</th><th class="num">Sick balance</th><th>Note</th><th></th>
       </tr></thead>
       <tbody>
         <tr><td colspan="5" class="note">Starting balances (as of ${p.payType==="monthly"?periodLabel(firstAnchorISO()):fmtDate(fromISO(p.balanceAsOf))})</td>
@@ -551,7 +551,7 @@ function logRow(row,i,n){
     <td class="num"><input type="number" step="${halfDay?4:0.5}" min="0" value="${row.r.sickTaken||0}" onchange="updRow(${i},'sickTaken',this.value,${conv})" title="${halfDay?"Exempt employees report in half-day increments (4 h)":"Hours"}">${(row.r.sickTaken||0)>0?`<select class="typeSel" onchange="updRow(${i},'sickType',this.value,0)" title="Which LETS code this sick-side leave was reported under (Bereavement also deducts from sick balance)">${SICK_TYPES.map(t=>`<option${(row.r.sickType||SICK_TYPES[0])===t?" selected":""}>${t}</option>`).join("")}</select>`:""}</td>
     <td class="num">+${h2(row.accr)}</td>
     <td class="num"><b class="${row.endBal<0?"neg":""}">${h2(row.endBal)}</b><br><span class="note">${dOnly(row.endBal)} d</span></td>
-    <td class="num ${row.lost>0.005?"lost":"zero"}">${row.lost>0.005?"−"+h2(row.lost):"0"}</td>
+    <td class="num ${row.lost>0.005?"lost":"zero"}"${row.lost>0.005?` title="You accrued +${h2(row.accr)} h this period but hit the cap. Taking ${h2(row.lost)} h more leave in this period would have saved these hours."`:""}>${row.lost>0.005?"−"+h2(row.lost):"0"}</td>
     <td class="num ${row.sickEnd<0?"neg":""}">${h2(row.sickEnd)}</td>
     <td><input type="text" value="${esc(row.r.note||"")}" onchange="updRow(${i},'note',this.value,0)" placeholder="e.g. FML, surgery…"></td>
     <td><button class="btn small danger" title="Remove this row. A completed period reappears as a fresh 'auto' row (normal schedule, no leave) — use this to reset a month you mis-entered." onclick="delRow(${i})">✕</button></td>
@@ -732,7 +732,7 @@ function renderFooter(){
   <div class="disc"><b>Disclaimer:</b> Unofficial planning tool for Berkeley Lab <b>non-represented</b> employees, based on the RPM
   <a href="https://commons.lbl.gov/spaces/rpm2/pages/74319215/Vacation+Leave" target="_blank" rel="noopener">Vacation Leave</a> policy (pub. 7/9/2021) and the Factor Leave Accrual Tables.
   LETS is the official record — always reconcile with LETS. Represented employees: consult your CBA. No data ever leaves your computer.</div>
-  <p style="text-align:center">Created by <b>Dr. Anikó Rasztovácz</b> · Made with ❤️ for Berkeley Lab colleagues · v1.6 · ${new Date().getFullYear()}</p>`;
+  <p style="text-align:center">Created by <b>Dr. Anikó Rasztovácz</b> · Made with ❤️ for Berkeley Lab colleagues · v1.7 · ${new Date().getFullYear()}</p>`;
 }
 
 /* ================= INIT ================= */
